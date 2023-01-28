@@ -9,13 +9,13 @@ public class WhatsappRepository {
 
     //Assume that each user belongs to at most one group
     //You can use the below mentioned hashmaps or delete these and create your own.
-    private HashMap<Group, List<User>> groupUserMap;
-    private HashMap<Group, List<Message>> groupMessageMap;
-    private HashMap<Message, User> senderMap;
-    private HashMap<Group, User> adminMap;
-    private HashSet<String> userMobile;
-    private HashMap<String, User> userMap;
-    private HashMap<Integer, Message> messageMap;
+    private final HashMap<Group, List<User>> groupUserMap;
+    private final HashMap<Group, List<Message>> groupMessageMap;
+    private final HashMap<Message, User> senderMap;
+    private final HashMap<Group, User> adminMap;
+    private final HashSet<String> userMobile;
+    private final HashMap<String, User> userMap;
+    private final HashMap<Integer, Message> messageMap;
     private int customGroupCount;
     private int messageId;
 
@@ -46,7 +46,7 @@ public class WhatsappRepository {
         if(users.size()==2){
             newGroup = new Group(users.get(1).getName(), users.size());
         }else{
-            newGroup = new Group("Group"+Integer.toString(++customGroupCount), users.size());
+            newGroup = new Group("Grup"+ ++customGroupCount, users.size());
         }
         groupUserMap.put(newGroup, users);
         adminMap.put(newGroup, users.get(0));
