@@ -14,6 +14,8 @@ public class WhatsappRepository {
     private HashMap<Message, User> senderMap;
     private HashMap<Group, User> adminMap;
     private HashSet<String> userMobile;
+    private HashMap<String, User> userMap;
+    private HashMap<Integer, Message> messageMap;
     private int customGroupCount;
     private int messageId;
 
@@ -23,6 +25,8 @@ public class WhatsappRepository {
         this.senderMap = new HashMap<Message, User>();
         this.adminMap = new HashMap<Group, User>();
         this.userMobile = new HashSet<>();
+        this.userMap = new HashMap<>();
+        this.messageMap =  new HashMap<>();
         this.customGroupCount = 0;
         this.messageId = 0;
     }
@@ -31,7 +35,8 @@ public class WhatsappRepository {
         if(userMobile.contains(mobile)){
             throw new Exception("User already exists");
         }
-//        User user = new User(name, mobile);
+        User user = new User(name, mobile);
+        userMap.put(mobile, user);
         userMobile.add(mobile);
         return "SUCCESS";
     }
@@ -41,15 +46,19 @@ public class WhatsappRepository {
         if(users.size()==2){
             newGroup = new Group(users.get(1).getName(), users.size());
         }else{
-            newGroup = new Group("Group"+Integer.toString(++customGroupCount), users.size());
+            customGroupCount++;
+            newGroup = new Group("Group"+customGroupCount, users.size());
         }
         groupUserMap.put(newGroup, users);
         adminMap.put(newGroup, users.get(0));
+        groupMessageMap.put(newGroup, new ArrayList<Message>());
         return  newGroup;
     }
 
     public int createMessage(String content){
-        Message newMessage = new Message(++messageId, content, new Date());
+        messageId++;
+        Message newMessage = new Message(messageId, content);
+        messageMap.put(messageId, newMessage);
         return messageId;
     }
 
@@ -57,36 +66,42 @@ public class WhatsappRepository {
         if(!groupUserMap.containsKey(group)){
             throw new Exception("Group does not exist");
         }
+        boolean flag = false;
         for(User user: groupUserMap.get(group)){
-            if(user.getMobile() == sender.getMobile()){
-                if(groupMessageMap.containsKey(group)){
-                    groupMessageMap.get(group).add(message);
-                }else{
-                    List<Message> temp = new ArrayList<>();
-                    temp.add(message);
-                    groupMessageMap.put(group, temp);
-                }
-                return message.getId();
-
+            if(user.getMobile().equals(sender.getMobile())){
+                flag = true;
+                break;
             }
         }
-        throw new Exception("sender is not a member of the group");
+        if(!flag){
+            throw new Exception("You are not allowed to send message");
+        }
+
+        senderMap.put(message, sender);
+        List<Message> list = groupMessageMap.get(group);
+        list.add(message);
+        groupMessageMap.put(group, list);
+        return list.size();
     }
 
     public String changeAdmin(User approver, User user, Group group) throws Exception{
         if(!groupUserMap.containsKey(group)){
-            throw new Exception("group does not exist");
+            throw new Exception("Group does not exist");
         }
         if(adminMap.get(group) != approver){
-            throw new Exception("the approver is not the current admin of the group");
+            throw new Exception("Approver does not have rights");
         }
+        boolean flag = false;
         for(User u: groupUserMap.get(group)){
-            if(u==user){
-                adminMap.put(group, user);
-                return "SUCCESS";
+            if(u.getMobile().equals(user.getMobile())){
+               flag = true;
+               break;
             }
         }
-        throw new Exception("user is not a part of the group");
+        if(!flag)
+        throw new Exception("User is not a participant");
+        adminMap.put(group, user);
+        return "SUCCESS";
     }
 
 }
